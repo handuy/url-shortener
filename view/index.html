@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" 
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" ></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" 
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"  crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" 
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.css" />
+
+    <link href="https://fonts.googleapis.com/css?family=Kalam&display=swap" rel="stylesheet">
+    <title>URL Shortener</title>
+</head>
+<body>
+    
+    <div id="moe" class="container">
+        <h2 style="font-family:'Kalam', cursive; text-align:center;">Shorten your URL</h2>
+        <div class="form-group">
+            <label for="yourUrl">Your URL here:</label>
+            <input type="text" class="form-control" id="yourUrl" placeholder="Enter your URL">
+        </div>
+
+        <div class="input-group mb-3" v-if="shortUrlGenerated == true">
+            <input type="text" class="form-control" v-bind:value="shortUrl">
+            <div class="input-group-append">
+                <button type="button" class="btn btn-success" v-on:click="copyLink()">Copy</button>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" v-on:click="shortenUrl()">Shorten</button>
+    </div>
+</body>
+</html>
+
+<script>
+    var app1 = new Vue({
+        el: '#moe',
+        data: {
+            shortUrlGenerated: false,
+            shortUrl: ""
+        },
+        mounted: function() {
+            toastr.options = {
+                    "closeButton": false,
+                    "debug": false,
+                    "newestOnTop": false,
+                    "progressBar": false,
+                    "positionClass": "toast-top-center",
+                    "preventDuplicates": true,
+                    "onclick": null,
+                    "showDuration": "500",
+                    "hideDuration": "300",
+                    "timeOut": "1000",
+                    'closeDuration': '100',
+                    "extendedTimeOut": "500",
+                    "showEasing": "swing",
+                    "hideEasing": "linear",
+                    "showMethod": "fadeIn",
+                    "hideMethod": "fadeOut"
+                }
+        },
+        methods: {
+            shortenUrl: function() {
+                let url = $("#yourUrl").val()
+
+                let req = {
+                    Path: url
+                }
+
+                var myJSON = JSON.stringify(req);
+                
+                $.ajax({
+                    url: "/shorten",
+                    contentType: "application/json; charset=utf-8",
+                    data: myJSON,
+                    type: "POST",
+                    statusCode: {
+                        200: (data) => {
+                            this.shortUrlGenerated = true
+                            this.shortUrl = window.location.hostname + data.ShortenUrl
+                        }
+                    }
+                });
+            },
+            copyLink: function() {
+                let copyLink =  this.shortUrl
+
+                let el = document.createElement('textarea');
+                el.value = copyLink;
+                el.setAttribute('readonly', '');
+                el.style = {position: 'absolute', left: '-9999px'};
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+
+                toastr.success("Link copied to clipboard")
+            }
+        }
+    })
+</script>
